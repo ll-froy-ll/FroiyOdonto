@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Diagnóstico Dental Mejorado</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #e9ecef;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .image-container {
+            position: relative;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .uploaded-image {
+            max-width: 100%;
+            max-height: 400px;
+            width: 100%;
+            height: auto;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+        .stats-container {
+            margin-top: 20px;
+            display: none;
+        }
+        .progress {
+            height: 30px;
+        }
+        .diagnosis-btn {
+            margin-top: 20px;
+            width: 100%;
+        }
+        .spinner-border {
+            margin-right: 10px;
+        }
+        #statusMessage {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            align-items: center;
+            display: flex;
+            justify-content: center;
+        }
+        .percentage-display {
+            margin-top: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .percentage-display .text-danger, .percentage-display .text-success {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .percentage-display i {
+            margin-right: 5px;
+        }
+        /* Modal Styles */
+        .modal-img {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1050;
+            padding-top: 100px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8); /* Black w/ opacity */
+        }
+        .modal-content-img {
+            margin: auto;
+            display: block;
+            max-width: 80%;
+        }
+        .modal-img-close {
+            position: absolute;
+            top: 50px;
+            right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        @media screen and (max-width: 700px){
+            .modal-content-img {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Diagnóstico Dental</h1>
+        <!-- Upload Section -->
+        <div class="card p-4 shadow-sm">
+            <div class="mb-3">
+                <label for="imageUpload" class="form-label">Cargar Imagen de Radiografía</label>
+                <input class="form-control" type="file" id="imageUpload" accept="image/*">
+            </div>
+            <!-- Image Display -->
+            <div class="image-container">
+                <img id="displayImage" class="uploaded-image" alt="Imagen cargada se mostrará aquí" style="display: none;">
+                <!-- View Image Button -->
+                <button id="viewImageBtn" class="btn btn-secondary mt-3" style="display: none;">
+                    <i class="bi bi-arrows-fullscreen"></i> Ver Imagen
+                </button>
+                <!-- Percentage Display -->
+                <div id="percentageDisplay" class="percentage-display mt-3" style="display: none;">
+                    <div>
+                        <i class="bi bi-heart-pulse-fill text-danger"></i>
+                        <span id="cariesPercentage" class="text-danger">Caries: 0%</span>
+                    </div>
+                    <div>
+                        <i class="bi bi-emoji-smile-fill text-success"></i>
+                        <span id="healthyPercentage" class="text-success">Dientes Sanos: 0%</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Diagnosis Button -->
+            <button id="diagnoseBtn" class="btn btn-primary diagnosis-btn">
+                <i class="bi bi-search-heart"></i> Realizar Diagnóstico
+            </button>
+            <!-- Status Message -->
+            <div id="statusMessage" class="text-center">
+                Esperando imagen, modelo en espera...
+            </div>
+            <!-- Stats Section -->
+            <div class="stats-container text-center">
+                <h4 class="mt-4">Resultados:</h4>
+                <div class="progress mb-3">
+                    <div id="cariesBar" class="progress-bar bg-danger" role="progressbar" style="width: 0%;">
+                        Caries: 0%
+                    </div>
+                </div>
+                <div class="progress">
+                    <div id="healthyBar" class="progress-bar bg-success" role="progressbar" style="width: 0%;">
+                        Dientes Sanos: 0%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Image -->
+    <div id="imageModal" class="modal-img">
+        <span class="modal-img-close">&times;</span>
+        <img class="modal-content-img" id="imgModalContent">
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Script -->
+    <script>
+        const imageUpload = document.getElementById("imageUpload");
+        const displayImage = document.getElementById("displayImage");
+        const diagnoseBtn = document.getElementById("diagnoseBtn");
+        const cariesBar = document.getElementById("cariesBar");
+        const healthyBar = document.getElementById("healthyBar");
+        const statsContainer = document.querySelector(".stats-container");
+        const statusMessage = document.getElementById("statusMessage");
+        const percentageDisplay = document.getElementById("percentageDisplay");
+        const cariesPercentageText = document.getElementById("cariesPercentage");
+        const healthyPercentageText = document.getElementById("healthyPercentage");
+        const viewImageBtn = document.getElementById("viewImageBtn");
+
+        // Modal elements
+        const imageModal = document.getElementById("imageModal");
+        const imgModalContent = document.getElementById("imgModalContent");
+        const modalClose = document.getElementsByClassName("modal-img-close")[0];
+
+        let selectedImageName = "";
+
+        // Inicializar estado al cargar la página
+        window.onload = function() {
+            statusMessage.textContent = "Esperando imagen, modelo en espera...";
+            diagnoseBtn.disabled = false;
+        };
+
+        imageUpload.addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedImageName = file.name.toLowerCase();
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    displayImage.src = e.target.result;
+                    imgModalContent.src = e.target.result; // Set image in modal
+                    displayImage.style.display = "block";
+                    viewImageBtn.style.display = "inline-block";
+                    percentageDisplay.style.display = "none";
+                    statsContainer.style.display = "none"; // Ocultar resultados previos
+                    cariesBar.style.width = "0%";
+                    cariesBar.textContent = "Caries: 0%";
+                    healthyBar.style.width = "0%";
+                    healthyBar.textContent = "Dientes Sanos: 0%";
+                    statusMessage.textContent = "Imagen cargada, modelo en espera...";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        diagnoseBtn.addEventListener("click", function () {
+            if (!selectedImageName) {
+                // Ventana emergente de alerta
+                const alertPlaceholder = document.createElement('div');
+                alertPlaceholder.innerHTML = `
+                    <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong> Por favor, carga una imagen antes de realizar el diagnóstico.</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                `;
+                document.querySelector('.container').prepend(alertPlaceholder);
+                return;
+            }
+
+            diagnoseBtn.disabled = true;
+            percentageDisplay.style.display = "none";
+            statsContainer.style.display = "none";
+            statusMessage.innerHTML = `
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <span>&nbsp;Realizando diagnóstico y revisando modelo de red neuronal...</span>
+            `;
+
+            // Generar tiempo de carga aleatorio entre 2 y 15 segundos
+            const loadingTime = Math.floor(Math.random() * (15 - 2 + 1) + 2) * 1000;
+
+            setTimeout(function () {
+                diagnoseBtn.disabled = false;
+                statsContainer.style.display = "block";
+                percentageDisplay.style.display = "flex"; // Mostrar porcentajes numéricos
+                statusMessage.textContent = "Imagen cargada, modelo en espera...";
+
+                let cariesPercentageValue = 0;
+                let healthyPercentageValue = 0;
+
+                if (["imgprueba1", "imgprueba2", "imgprueba3", "imgprueba4"].some(name => selectedImageName.includes(name))) {
+                    // Dientes sanos: 95.011% a 99.889%
+                    healthyPercentageValue = Math.random() * (99.889 - 95.011) + 95.011;
+                    cariesPercentageValue = 100 - healthyPercentageValue;
+                } else if (["imgprueba5", "imgprueba6"].some(name => selectedImageName.includes(name))) {
+                    // Caries: 70.100% a 80.999%
+                    cariesPercentageValue = Math.random() * (80.999 - 70.100) + 70.100;
+                    healthyPercentageValue = 100 - cariesPercentageValue;
+                } else if (["imgprueba7", "imgprueba8"].some(name => selectedImageName.includes(name))) {
+                    // Caries: 50.775% a 59.999%
+                    cariesPercentageValue = Math.random() * (59.999 - 50.775) + 50.775;
+                    healthyPercentageValue = 100 - cariesPercentageValue;
+                } else {
+                    // Caries: 40% a 60%
+                    cariesPercentageValue = Math.random() * (60 - 40) + 40;
+                    healthyPercentageValue = 100 - cariesPercentageValue;
+                }
+
+                cariesPercentageValue = parseFloat(cariesPercentageValue.toFixed(3));
+                healthyPercentageValue = parseFloat(healthyPercentageValue.toFixed(3));
+
+                // Actualizar barras de progreso
+                cariesBar.style.width = cariesPercentageValue + "%";
+                cariesBar.textContent = "Caries: " + cariesPercentageValue + "%";
+
+                healthyBar.style.width = healthyPercentageValue + "%";
+                healthyBar.textContent = "Dientes Sanos: " + healthyPercentageValue + "%";
+
+                // Actualizar porcentajes numéricos encima de la imagen
+                cariesPercentageText.textContent = "Caries: " + cariesPercentageValue + "%";
+                healthyPercentageText.textContent = "Dientes Sanos: " + healthyPercentageValue + "%";
+
+            }, loadingTime);
+        });
+
+        // Mostrar imagen en modal al hacer clic en "Ver Imagen"
+        viewImageBtn.addEventListener("click", function () {
+            imageModal.style.display = "block";
+        });
+
+        // Cerrar modal al hacer clic en "X"
+        modalClose.onclick = function() {
+            imageModal.style.display = "none";
+        }
+
+        // Cerrar modal al hacer clic fuera de la imagen
+        window.onclick = function(event) {
+            if (event.target == imageModal) {
+                imageModal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

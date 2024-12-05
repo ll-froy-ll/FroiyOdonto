@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clinica EcoDent Unifranz</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+  <style>
+    #mi-iframe {
+      margin: 10px 20px 0px 15px;
+      width: 99%;
+      height: 97%;
+      border: none;
+      opacity: 1; 
+    }
+  </style>
+</head>
+<body>
+  <section class="sidebar">
+    <div class="nav-header">
+      <p class="logo">Odonto Dent</p>
+      <i class="bx bx-menu btn-menu"></i>
+    </div>
+    <ul class="nav-links">
+      <li>
+        <i class="bx bx-search search-btn"></i>
+        <input type="text" placeholder="buscar..." />
+        <span class="tooltip">Buscar</span>
+      </li>
+      <li>
+        <a href="#" id="home-link">
+          <i class="bx bx-home-alt-2"></i>
+          <span class="title">Inicio</span>
+        </a>
+        <span class="tooltip">Inicio</span>
+      </li>
+      <li>
+        <a href="#" id="clin">
+          <i class="bx bx-plus"></i>
+          <span class="title">Clinica</span>
+        </a>
+        <span class="tooltip">Clinica</span>
+      </li>
+      <li>
+        <a href="#" id="odo">
+          <i class="bx bx-bookmark"></i>
+          <span class="title">Odontologos</span>
+        </a>
+        <span class="tooltip">Odontologos</span>
+      </li>
+      <li>
+        <a href="#" id="pcientes">
+            <i class="bx bxs-user"></i> 
+            <span class="title">Pacientes</span> 
+        </a>
+        <span class="tooltip">Pacientes</span> 
+    </li>
+      <li>
+        <a href="#" id="agenda">
+            <i class="bx bxs-quote-right"></i> 
+            <span class="title">Agenda</span> 
+        </a>
+        <span class="tooltip">Agenda</span>
+    </li>
+      <li>
+        <a href="#" id="Confi">
+          <i class="bx bx-cog"></i>
+          <span class="title">Configuraciones</span>
+        </a>
+        <span class="tooltip">Configuraciones</span>
+      </li>
+    </ul>
+    <div class="theme-wrapper">
+      <i class="bx bxs-moon theme-icon"></i>
+      <p>Tema oscuro</p>
+      <div class="theme-btn">
+        <span class="theme-ball"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="home">
+    <div id="content">
+      <!-- Aquí establecemos 'home.html' como el contenido predeterminado del iframe -->
+      <iframe id="mi-iframe" src="home.html" style="width: 100%; height: 100%; border: none;"></iframe>
+    </div>
+  </section>
+
+  <script>
+    const btn_menu = document.querySelector(".btn-menu");
+    const side_bar = document.querySelector(".sidebar");
+
+    btn_menu.addEventListener("click", function () {
+      side_bar.classList.toggle("expand");
+      changebtn();
+    });
+
+    function changebtn() {
+      if (side_bar.classList.contains("expand")) {
+        btn_menu.classList.replace("bx-menu", "bx-menu-alt-right");
+      } else {
+        btn_menu.classList.replace("bx-menu-alt-right", "bx-menu");
+      }
+    }
+
+    const btn_theme = document.querySelector(".theme-btn");
+    const theme_ball = document.querySelector(".theme-ball");
+
+    const localData = localStorage.getItem("theme");
+
+    if (localData == null) {
+      localStorage.setItem("theme", "light");
+    }
+
+    if (localData == "dark") {
+      document.body.classList.add("dark-mode");
+      theme_ball.classList.add("dark");
+    } else if (localData == "light") {
+      document.body.classList.remove("dark-mode");
+      theme_ball.classList.remove("dark");
+    }
+
+    btn_theme.addEventListener("click", function () {
+      document.body.classList.toggle("dark-mode");
+      theme_ball.classList.toggle("dark");
+      if (document.body.classList.contains("dark-mode")) {
+        localStorage.setItem("theme", "dark");
+      } else {
+        localStorage.setItem("theme", "light");
+      }
+    });
+
+    document.getElementById('home-link').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('mi-iframe').src = 'home.html';
+    });
+    document.getElementById('Confi').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('mi-iframe').src = 'configuraciones.html';
+    });
+    document.getElementById('agenda').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('mi-iframe').src = 'agenda.html';
+    });
+    document.getElementById('pcientes').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('mi-iframe').src = 'pacientes.html';
+    });
+    document.getElementById('odo').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('mi-iframe').src = 'odont.html';
+    });
+    document.getElementById('clin').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('mi-iframe').src = 'clinica.html';
+    });
+  </script>
+</body>
+</html>
